@@ -137,7 +137,7 @@ def main():
 		if do_output == 1:
 			record_table.writerow(keystr + [etype])
 			for k,v in rec.iteritems():
-				print k,v
+				#print k,v
 				key_table.writerow(keystr + [k, v] )
 		if do_output == 0:
 			print rec
