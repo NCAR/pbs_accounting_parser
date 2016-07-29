@@ -23,6 +23,7 @@
 
 from sys import argv,exit
 from string import split,join
+import csv
 import os
 
 def parse_acct_record(m):
@@ -108,8 +109,10 @@ def main():
 		exit(1)
 	if len(argv) > 2:
 		do_output = 1
-		key_table = open(argv[2], 'w')
-		record_table = open(argv[3], 'w')
+		key_table_fd = open(argv[2], 'w')
+		key_table = csv.writer(key_table_fd)
+		record_table_fd = open(argv[3], 'w')
+		record_table = csv.writer(record_table_fd)
 
 	accounting_file = open(argv[1], 'r')
 
@@ -126,17 +129,17 @@ def main():
 			continue #PBS license stats? not associated with a job
 		rec = parse_acct_record(message)
 
-		keystr = "%s,%s,%s" % (accounting_file_name, time, entity)
+		keystr = [accounting_file_name, time, entity]
 		if do_output == 1:
-			record_table.write("%s,%s\n" % (keystr, etype) )
+			record_table.writerow(keystr + [etype])
 			for k,v in rec.iteritems():
 				print k,v
-				key_table.write("%s,%s,%s\n" % (keystr, k, v) )
+				key_table.writerow(keystr + [k, v] )
 		if do_output == 0:
 			print rec
 	if do_output == 1:
-		key_table.close()
-		record_table.close()
+		key_table_fd.close()
+		record_table_fd.close()
 
 	accounting_file.close()
 
