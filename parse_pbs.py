@@ -25,6 +25,8 @@ from sys import argv,exit
 from string import split,join
 import csv
 import os
+import time
+import calendar
 
 def parse_acct_record(m):
 	squote = 0
@@ -121,7 +123,8 @@ def main():
 
 	for entry in accounting_file:
 		fields = split(entry, ';')
-		time = fields[0] #localtime() -- local time
+		rtime = time.strptime(fields[0], "%m/%d/%Y %H:%M:%S") #localtime() -- local time
+		rtime = calendar.timegm(rtime)
 		etype = fields[1] #[LQSED]
 		entity = fields[2] #"license" or job number	
 		message = join(fields[3:])
@@ -129,7 +132,7 @@ def main():
 			continue #PBS license stats? not associated with a job
 		rec = parse_acct_record(message)
 
-		keystr = [accounting_file_name, time, entity]
+		keystr = [accounting_file_name, rtime, entity]
 		if do_output == 1:
 			record_table.writerow(keystr + [etype])
 			for k,v in rec.iteritems():
