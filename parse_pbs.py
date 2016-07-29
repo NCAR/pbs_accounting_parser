@@ -120,8 +120,9 @@ def main():
 
 	accounting_file_name = os.path.basename(argv[1])
 
-
+	record_id = -1
 	for entry in accounting_file:
+		record_id = record_id + 1
 		fields = split(entry, ';')
 		rtime = time.strptime(fields[0], "%m/%d/%Y %H:%M:%S") #localtime() -- local time
 		rtime = calendar.timegm(rtime)
@@ -132,7 +133,7 @@ def main():
 			continue #PBS license stats? not associated with a job
 		rec = parse_acct_record(message)
 
-		keystr = [accounting_file_name, rtime, entity]
+		keystr = [accounting_file_name, record_id, rtime, entity]
 		if do_output == 1:
 			record_table.writerow(keystr + [etype])
 			for k,v in rec.iteritems():
