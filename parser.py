@@ -161,7 +161,7 @@ def parse_select(val):
 	else:
 		rval[key] = value
 
-	print rval
+	# print rval
 	return rval
 
 
