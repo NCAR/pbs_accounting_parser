@@ -145,23 +145,33 @@ def parse_select(val):
 				if key == "" and value.isdigit():
 					rval["copies"] = value
 				else:
-					rval[key] = value  # If its just a semicolon then it is separating a key from a value so write what we have in and then start on the new key
+					rval[key] = value  # If important semicolon then it is separating a key from a value so write what we have in and then start on the new key
 				
 				key = ""
 				value = ""
 				continue
 
+		# Plus signs = extra chunks
+		if val[i] == '+':
+			if in_key==0 and (squote > 0 or dquote > 0 or paren > 0):
+				value+=val[i]
+			else:
+				rval[key] = value
+				key = ""
+				value = ""
+			continue
+
 		# Equals
 		if val[i] == '=' and (squote == 0 and dquote == 0 and paren == 0):
-			if value is "": # If theres blank space in the value
+			if value is "": 
 				in_key = 0
 				continue
 		if val[i] == ' ' and (squote > 0 or dquote > 0 or paren > 0):
 			if in_key == 1:
-				key += val[i]    # Append space to key and keep goin
+				key += val[i]    
 				continue
 			else:
-				value += val[i] # if in value, append to value
+				value += val[i] 
 				continue
 
 		if in_key == 1:
@@ -172,8 +182,9 @@ def parse_select(val):
 	if key== "":
 		rval["poop"] = value
 	else:
-		rval[key.rstrip('\n')] = value.rstrip('\n')
+		rval[key] = value
 
+	print rval
 	return rval
 
 
