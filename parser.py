@@ -26,7 +26,7 @@ def parse_acct_record(m):
 		if m[i] == '(':
 			paren = paren + 1
 		if m[i] == ')':
-			paren = paren - 1	
+			paren = paren - 1
 		#single quotes are the next strongest escape character
 		if m[i] == '\'':
 			if squote > 0:
@@ -83,14 +83,18 @@ def parse_acct_record(m):
 	return rval
 
 def parse_select(val):
+	print val
 	squote = 0
 	dquote = 0
 	paren = 0
 	key = ""
 	value = ""
 	in_key = 1
-	rval = {}
-	
+	copies = 0
+	listoflists = []
+	rlist = []
+	temp = {}
+
 	for i in range(0,len(val)):
 
 		#Parentheses
@@ -120,10 +124,13 @@ def parse_select(val):
 				in_key = 1
 
 				if key == "" and value.isdigit():
-					rval["copies"] = value
+					# rlist.append("copies:"+value)
+					listoflists.append("copies:"+value)
+					# rval["copies"] = value
 				else:
-					rval[key] = value  # If important semicolon then it is separating a key from a value so write what we have in and then start on the new key
-				
+					rlist.append(key+":"+value)
+					# rval[key] = value  # If important semicolon then it is separating a key from a value so write what we have in and then start on the new key
+
 				key = ""
 				value = ""
 				continue
@@ -132,23 +139,25 @@ def parse_select(val):
 		if val[i] == '+':
 			if in_key==0 and (squote > 0 or dquote > 0 or paren > 0):
 				value+=val[i]
-			else:
-				rval[key] = value
+			elif in_key==0 and (squote == 0 or dquote == 0 or paren == 0):
+				rlist.append(key+":"+value)
+				listoflists.append(rlist)
+				rlist = []
 				key = ""
 				value = ""
 			continue
 
 		# Equals
 		if val[i] == '=' and (squote == 0 and dquote == 0 and paren == 0):
-			if value is "": 
+			if value is "":
 				in_key = 0
 				continue
 		if val[i] == ' ' and (squote > 0 or dquote > 0 or paren > 0):
 			if in_key == 1:
-				key += val[i]    
+				key += val[i]
 				continue
 			else:
-				value += val[i] 
+				value += val[i]
 				continue
 
 		if in_key == 1:
@@ -157,12 +166,17 @@ def parse_select(val):
 			value += val[i]
 
 	if key== "":
-		rval["poop"] = value
+		rlist.append("invalid:"+value)
+		listoflists.append(rlist)
+		# rval["invalid"] = value
 	else:
-		rval[key] = value
+		rlist.append(key+":"+value)
+		listoflists.append(rlist)
+		# rval[key] = value
 
+	print listoflists
 	# print rval
-	return rval
+	return rlist
 
 
 
@@ -176,8 +190,12 @@ def main():
 		do_output = 1
 		key_table_fd = open(argv[2], 'w')
 		key_table = csv.writer(key_table_fd)
+
 		record_table_fd = open(argv[3], 'w')
 		record_table = csv.writer(record_table_fd)
+
+		res_table_fd= open('resource_type','w')
+		res_table = csv.writer(res_table_fd)
 
 	accounting_file = open(argv[1], 'r')
 
@@ -190,24 +208,29 @@ def main():
 		rtime = time.strptime(fields[0], "%m/%d/%Y %H:%M:%S") #localtime() -- local time
 		rtime = calendar.timegm(rtime)
 		etype = fields[1] #[LQSED]
-		entity = fields[2] #"license" or job number	
+		entity = fields[2] #"license" or job number
 		message = join(fields[3:])
 		if etype == 'L':
 			continue #PBS license stats? not associated with a job
 		rec = parse_acct_record(message)
 
-		# wanted_key = ["Resource_List.place","Resource_List.mpiprocs","Resource_List.walltime","Resource_List.select","Resource_List.ncpus","Resource_List.nodect"]
 
 		keystr = [accounting_file_name, record_id, rtime, entity]
 		if do_output == 1:
 			record_table.writerow(keystr + [etype])
 			for k,v in rec.iteritems():
-				
+
+				res_table.writerow([k])
+
 				if re.search("select",k):
 					result = parse_select("="+v)
+					# print result
 
-					for s_key, val in result.iteritems():
-						key_table.writerow(keystr + [k, s_key,val])
+					# for s_key, val in result.iteritems():
+						# key_table.writerow(keystr + [k, s_key,val])
+
+					for i in result:
+						key_table.writerow(keystr + [k,i])
 				else:
 					key_table.writerow(keystr + [k, v] )
 		if do_output == 0:
