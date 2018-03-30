@@ -106,17 +106,13 @@ def parse_acct_record(m):
 	return rval
 
 def parse_select(val):
-	print val
-	squote = 0
-	dquote = 0
-	paren = 0
+	# print val
+	squote,dquote,paren,copies = 0,0,0,0
 	key = ""
 	value = ""
 	in_key = 1
-	copies = 0
 	listoflists = []
 	rlist = []
-	temp = {}
 
 	for i in range(0,len(val)):
 
@@ -147,12 +143,11 @@ def parse_select(val):
 				in_key = 1
 
 				if key == "" and value.isdigit():
-					# rlist.append("copies:"+value)
-					listoflists.append("copies:"+value)
-					# rval["copies"] = value
+					# listoflists.append(value)
+					copies = value
+
 				else:
 					rlist.append(key+":"+value)
-					# rval[key] = value  # If important semicolon then it is separating a key from a value so write what we have in and then start on the new key
 
 				key = ""
 				value = ""
@@ -163,8 +158,8 @@ def parse_select(val):
 			if in_key==0 and (squote > 0 or dquote > 0 or paren > 0):
 				value+=val[i]
 			elif in_key==0 and (squote == 0 or dquote == 0 or paren == 0):
-				rlist.append(key+":"+value)
-				listoflists.append(rlist)
+				rlist.append(key+':'+value)
+				listoflists.append(tuple([copies,rlist]))
 				rlist = []
 				key = ""
 				value = ""
@@ -190,16 +185,15 @@ def parse_select(val):
 
 	if key== "":
 		rlist.append("invalid:"+value)
-		listoflists.append(rlist)
-		# rval["invalid"] = value
+		listoflists.append(tuple([copies,rlist]))
+
 	else:
 		rlist.append(key+":"+value)
-		listoflists.append(rlist)
-		# rval[key] = value
+		listoflists.append(tuple([copies,rlist]))
 
-	print listoflists
-	# print rval
-	return rlist
+
+	# print listoflists
+	return listoflists
 
 
 
@@ -211,20 +205,24 @@ def main():
 		exit(1)
 	if len(argv) > 2:
 		do_output = 1
-		key_table_fd = open(argv[2], 'w')
-		key_table = csv.writer(key_table_fd)
+		resource_table_fd = open(argv[2], 'w')
+		resource_table = csv.writer(resource_table_fd)
 
-		record_table_fd = open(argv[3], 'w')
-		record_table = csv.writer(record_table_fd)
+		jobs_table_fd = open(argv[3], 'w')
+		jobs_table = csv.writer(jobs_table_fd)
 
-		res_table_fd= open('resource_type','w')
-		res_table = csv.writer(res_table_fd)
+		entries_table_fd= open('resource_entries','w')
+		entries_table = csv.writer(entries_table_fd)
+
+		values_table_fd = open('resource_entry_values','w')
+		values_table = csv.writer(values_table_fd)
 
 	accounting_file = open(argv[1], 'r')
 
 	accounting_file_name = os.path.basename(argv[1])
 
 	record_id = -1
+
 	for entry in accounting_file:
 		record_id = record_id + 1
 		fields = split(entry, ';')
@@ -234,34 +232,38 @@ def main():
 		entity = fields[2] #"license" or job number
 		message = join(fields[3:])
 		if etype == 'L':
-			continue #PBS license stats? not associated with a job
+			continue #PBS license stats? not associated with a job, skip
+
 		rec = parse_acct_record(message)
 
-
-		keystr = [accounting_file_name, record_id, rtime, entity]
+		keystr = [record_id, accounting_file_name, rtime, entity]
 		if do_output == 1:
-			record_table.writerow(keystr + [etype])
+			jobs_table.writerow(keystr + [etype])   #Writes jobs csv file
 			for k,v in rec.iteritems():
 
-				res_table.writerow([k])
-
 				if re.search("select",k):
+					resource_table.writerow(keystr + [k])
+
 					result = parse_select("="+v)
-					# print result
+					# tuple[0] goes in entries table, tuple[1] is delimited by ':' and goes into values table
+					for tup in result:
+						entries_table.writerow(keystr + [tup[0]])
+						for val in tup[1]:
+							values_table.writerow(keystr + [val])
 
-					# for s_key, val in result.iteritems():
-						# key_table.writerow(keystr + [k, s_key,val])
 
-					for i in result:
-						key_table.writerow(keystr + [k,i])
+
 				else:
-					key_table.writerow(keystr + [k, v] )
+					resource_table.writerow(keystr + [k])
+					entries_table.writerow(keystr + [v])
 		if do_output == 0:
 			print rec
 
 	if do_output == 1:
-		key_table_fd.close()
-		record_table_fd.close()
+		resource_table_fd.close()
+		jobs_table_fd.close()
+		entries_table_fd.close()
+		values_table_fd.close()
 
 	accounting_file.close()
 
