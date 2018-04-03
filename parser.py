@@ -228,8 +228,6 @@ def main():
 						for val in tup[1]:
 							values_table.writerow(keystr + [val])
 
-
-
 				else:
 					resource_table.writerow(keystr + [k])
 					entries_table.writerow(keystr + [v])
