@@ -198,10 +198,12 @@ def main():
 
 	accounting_file_name = os.path.basename(argv[1])
 
-	record_id = -1
+	job_id = -1
+	resource_id = -1
+	entry_id = -1
 
 	for entry in accounting_file:
-		record_id = record_id + 1
+		job_id = job_id + 1
 		fields = split(entry, ';')
 		rtime = time.strptime(fields[0], "%m/%d/%Y %H:%M:%S") #localtime() -- local time
 		rtime = calendar.timegm(rtime)
@@ -212,25 +214,33 @@ def main():
 			continue #PBS license stats? not associated with a job, skip
 
 		rec = parse_acct_record(message)
+		# print rec
 
-		keystr = [record_id, accounting_file_name, rtime, entity]
+		keystr = [job_id, accounting_file_name, rtime, entity]
+
 		if do_output == 1:
 			jobs_table.writerow(keystr + [etype])   #Writes jobs csv file
+
 			for k,v in rec.iteritems():
 
+				resource_id+=1
+				entry_id+=1
+				keystr1 = [resource_id,job_id]
+
 				if re.search("select",k):
-					resource_table.writerow(keystr + [k])
+					resource_table.writerow(keystr1 + [k])
 
 					result = parse_select("="+v)
 					# tuple[0] goes in entries table, tuple[1] is delimited by ':' and goes into values table
 					for tup in result:
-						entries_table.writerow(keystr + [tup[0]])
+						entry_id+=1
+						entries_table.writerow([entry_id,resource_id] + [tup[0]])
 						for val in tup[1]:
-							values_table.writerow(keystr + [val])
+							values_table.writerow([entry_id] + [val])
 
 				else:
-					resource_table.writerow(keystr + [k])
-					entries_table.writerow(keystr + [v])
+					resource_table.writerow(keystr1 + [k])
+					entries_table.writerow([entry_id,resource_id] + [v])
 		if do_output == 0:
 			print rec
 
