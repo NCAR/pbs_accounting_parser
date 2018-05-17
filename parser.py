@@ -200,26 +200,26 @@ def parse_select(val):
 
 def main():
 	do_output = 0
-	if len(argv) < 3:
-		print "accounting_file [key_table] [job_table]"
+	if len(argv) < 2:
+		print "accounting_file"
 		exit(1)
-	if len(argv) > 2:
+	else:
 		do_output = 1
-		resource_table_fd = open(argv[2], 'w')
+		resource_table_fd = open('csv_output/resources', 'w')
 		resource_table = csv.writer(resource_table_fd)
 
-		jobs_table_fd = open(argv[3], 'w')
+		jobs_table_fd = open('csv_output/jobs', 'w')
 		jobs_table = csv.writer(jobs_table_fd)
 
-		entries_table_fd= open('resource_entries','w')
+		entries_table_fd= open('csv_output/resource_entries','w')
 		entries_table = csv.writer(entries_table_fd)
 
-		values_table_fd = open('resource_entry_values','w')
+		values_table_fd = open('csv_output/resource_entry_values','w')
 		values_table = csv.writer(values_table_fd)
 
-	accounting_file = open(argv[1], 'r')
+		accounting_file = open(argv[1], 'r')
 
-	accounting_file_name = os.path.basename(argv[1])
+		accounting_file_name = os.path.basename(argv[1])
 
 	job_id = -1
 	resource_id = -1
@@ -237,7 +237,6 @@ def main():
 			continue #PBS license stats? not associated with a job, skip
 
 		rec = parse_acct_record(message)
-		# print rec
 
 		keystr = [job_id, accounting_file_name, rtime, entity]
 
