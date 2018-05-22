@@ -205,16 +205,18 @@ def main():
 		exit(1)
 	else:
 		do_output = 1
-		resource_table_fd = open('csv_output/resources', 'w')
+		name_str = '_'+(argv[1].split('/')[1])
+
+		resource_table_fd = open('csv_output/resources' + name_str, 'w')
 		resource_table = csv.writer(resource_table_fd)
 
-		jobs_table_fd = open('csv_output/jobs', 'w')
+		jobs_table_fd = open('csv_output/jobs'+ name_str, 'w')
 		jobs_table = csv.writer(jobs_table_fd)
 
-		entries_table_fd= open('csv_output/resource_entries','w')
+		entries_table_fd= open('csv_output/resource_entries'+ name_str,'w')
 		entries_table = csv.writer(entries_table_fd)
 
-		values_table_fd = open('csv_output/resource_entry_values','w')
+		values_table_fd = open('csv_output/resource_entry_values'+ name_str,'w')
 		values_table = csv.writer(values_table_fd)
 
 		accounting_file = open(argv[1], 'r')
