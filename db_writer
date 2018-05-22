@@ -1,0 +1,73 @@
+import sqlite3
+import csv
+from sys import argv
+
+def get_id(db_name,table_name,column1,column2):
+
+    conn = sqlite3.connect(db_name)
+    c = conn.cursor()
+
+    id_table = {}
+
+    for row in c.execute('SELECT {},{} from {}'.format(column1,column2,table_name)):
+        id_table[row[1]] = row[0]
+    # print (id_table)
+
+    return id_table
+
+def read_csv(file_path):
+    with open(file_path, 'rb') as f:
+        reader = csv.reader(f)
+        return list(reader)
+
+def swap(hash_table,db_name,table,column):
+
+    conn = sqlite3.connect(db_name)
+    c = conn.cursor()
+    d = conn.cursor()
+
+    for row in c.execute('SELECT {} from {}'.format(column,table)):
+
+        if (row[0] in hash_table):
+            swap_num = hash_table[row[0]]
+
+            query = 'UPDATE resources SET job_id = ? WHERE job_id = ?'
+
+            values = (hash_table[row[0]],row[0])
+
+            d.execute(query, values)
+            conn.commit()
+
+            print ("Replaced {} with {}".format(row[0],hash_table[row[0]]))
+
+
+def main():
+    if len(argv) < 2:
+        print ("jobs resources resource_entries values")
+        exit(1)
+
+    else:
+
+        jobs = read_csv(argv[1])
+
+        conn = sqlite3.connect('test_db')
+        c = conn.cursor()
+
+        # c.executemany('INSERT INTO jobs(id,date,time,job_id,status) VALUES (?,?,?,?,?)',jobs)
+        # conn.commit()
+
+        j_id = get_id("test_db","jobs","primary_id","id")
+        # print (j_id)
+
+
+        resources = read_csv(argv[2])
+
+        # c.executemany('INSERT INTO resources(id,job_id,resource) VALUES (?,?,?)',resources)
+        # conn.commit()
+
+        swap(j_id,"test_db","resources","job_id")
+
+        #Use hash table to renumber id fields as you insert the other tables in the database (write function to insert tables in database)
+
+if __name__ == "__main__":
+	main()
