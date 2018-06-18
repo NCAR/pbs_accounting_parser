@@ -29,7 +29,7 @@ import time
 import calendar
 import re
 
-def parse_acct_record(m):
+def parse_acct_record(m,filename):
 	squote = 0
 	dquote = 0
 	paren = 0
@@ -38,12 +38,14 @@ def parse_acct_record(m):
 	in_key = 1
 	rval = {}
 
+	logfile = open('logs/log_'+filename,'w')
+
 	for i in range(0, len(m)):
 		#safety checks
 		if in_key < 0:
-			raise Exception("Unexpected Happened")
+			logfile.write("WARNING: in_key variable set to invalid number")
 		if in_key < 1 and key == "":
-			raise Exception("Null Key")
+			logfile.write("WARNING: Null key")
 
 		#parens seem to be super-quotes
 		if m[i] == '(':
@@ -72,8 +74,8 @@ def parse_acct_record(m):
 			else:
 				if not (m[i] == '=' and in_key == 0):
 					#pretty sure you can't have an equal in a key
-					print m
-					raise Exception("Unhandled Input", m[i])
+					# print m
+					logfile.write("WARNING: Unhandled Input")
 		if m[i] == ' ' and (squote > 0 or dquote > 0 or paren > 0):
 			if in_key == 1:
 				key += m[i]
@@ -87,21 +89,21 @@ def parse_acct_record(m):
 			if not key in rval:
 				rval[key] = value
 			else:
-				raise Exception("Duplicate Key")
+				logfile.write("WARNING: Duplicate key, could affect the data that's parsed. Key: {} Value: {}".format(key,value))
 			in_key = 1
 			key = ""
 			value = ""
 			continue
 		if m[i] == ' ':
 			continue
-			raise Exception("Unexpected whitespace")
+			logfile.write("Unexpected Whitespace")
 		if in_key == 1:
 			key += m[i]
 		if in_key == 0:
 			value += m[i]
 	if in_key == 1 and len(key) > 1:
 		#raise Exception("Partial Record Detected", argv[1])
-		print "Warning: Gibberish: " + key
+		logfile.write("Warning: Gibberish: " + key)
 	rval[key.rstrip('\n')] = value.rstrip('\n')
 	return rval
 
@@ -238,9 +240,9 @@ def main():
 		if etype == 'L':
 			continue #PBS license stats? not associated with a job, skip
 
-		rec = parse_acct_record(message)
+		rec = parse_acct_record(message,accounting_file_name)
 
-		keystr = [job_id, accounting_file_name, rtime, entity]
+		keystr = [job_id , rtime, entity]
 
 		if do_output == 1:
 			jobs_table.writerow(keystr + [etype])   #Writes jobs csv file
