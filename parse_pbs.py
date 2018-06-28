@@ -20,7 +20,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-
 from sys import argv,exit
 from string import split,join
 import csv
@@ -149,4 +148,8 @@ def main():
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
 	main()
+=======
+	main()
+>>>>>>> 53a7c89fd30d6936023a59cd28ca4e190ce2062f
