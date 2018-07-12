@@ -68,17 +68,15 @@ def main():
                 entr_values = read_csv(i)
                 continue
         
+		database = "test2.db"
 
-        conn = sqlite3.connect('db_v3')   # Open a connection to the database
+        conn = sqlite3.connect(database)   # Open a connection to the database
         c = conn.cursor()
 
         c.executemany('INSERT INTO jobs(id,time,identifier,record) VALUES (?,?,?,?)',jobs)
         conn.commit()
 
         j_id = get_id(conn,"jobs","job_id","id")   # Pass in connection and return dictionary of id mappings
-
-
-
 
         for line in resources:
             temp_id = line[0]
