@@ -68,7 +68,7 @@ def main():
                 entr_values = read_csv(i)
                 continue
         
-		database = "test2.db"
+		database = "test.db"
 
         conn = sqlite3.connect(database)   # Open a connection to the database
         c = conn.cursor()
