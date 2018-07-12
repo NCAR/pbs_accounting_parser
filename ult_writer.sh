@@ -1,8 +1,11 @@
 #!/bin/bash
 
 if [ $# -gt 0 ]; then
-    python create_db.py $1
-    sed -i '' '71s/.*/		database = "'$1'"/' db_writer.py
+	if [ -f $1]; then
+		sed -i '' '71s/.*/		database = "'$1'"/' db_writer.py
+	else
+    	python create_db.py $1
+    	sed -i '' '71s/.*/		database = "'$1'"/' db_writer.py
 else
     echo "There are no arguments, please provide a database name"
     exit 1
